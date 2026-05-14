@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 2 · Випадкове мистецтво</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,500&family=Vollkorn:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  :root {
+    --paper: #F4ECDA;
+    --paper-darker: #EAE0CB;
+    --ink: #1B1A2A;
+    --ink-soft: #4A4660;
+    --coral: #D85C3A;
+    --coral-soft: #F2BFAD;
+    --sage: #4F7A52;
+    --sage-soft: #C5D8C2;
+    --indigo: #2F4A7C;
+    --gold: #C99B45;
+    --border: #D2C8AE;
+    --code-paper: #F8F2E4;
+    --shadow: rgba(31, 30, 45, 0.12);
+    --shadow-strong: rgba(31, 30, 45, 0.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Vollkorn', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.55;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body {
+    background-image:
+      radial-gradient(at 20% 10%, rgba(216, 92, 58, 0.06) 0%, transparent 40%),
+      radial-gradient(at 80% 90%, rgba(47, 74, 124, 0.05) 0%, transparent 45%);
+    background-attachment: fixed;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.15 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    z-index: 1;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'Fraunces', serif;
+  }
+  .topbar .logo { font-weight: 800; font-size: 15px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .topbar .logo span { color: var(--coral); }
+  .topbar .meta { font-size: 13px; color: var(--ink-soft); font-style: italic; }
+  .stage { max-width: 980px; margin: 0 auto; padding: 32px 24px 140px; position: relative; z-index: 2; }
+  .slide { display: none; animation: fadeIn 0.35s ease-out; }
+  .slide.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .step-tag {
+    display: inline-block; padding: 5px 14px; background: var(--ink); color: var(--paper);
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em;
+    text-transform: uppercase; border-radius: 2px; margin-bottom: 18px;
+  }
+  .step-tag.coral { background: var(--coral); }
+  .step-tag.sage { background: var(--sage); }
+  .step-tag.indigo { background: var(--indigo); }
+  h1.slide-title {
+    font-family: 'Fraunces', serif; font-weight: 800;
+    font-size: clamp(28px, 4.5vw, 48px); line-height: 1.05;
+    margin-bottom: 16px; letter-spacing: -0.015em;
+  }
+  h1.slide-title em { font-style: italic; color: var(--coral); font-weight: 500; }
+  p.lead { font-size: 19px; color: var(--ink-soft); margin-bottom: 24px; max-width: 65ch; }
+  p { margin-bottom: 14px; max-width: 70ch; }
+ 
+  /* COVER */
+  .cover { text-align: left; padding-top: 40px; position: relative; }
+  .cover .deck-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--coral); letter-spacing: 0.2em; margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-family: 'Fraunces', serif; font-size: clamp(40px, 7vw, 84px);
+    font-weight: 800; line-height: 0.98; letter-spacing: -0.02em; margin-bottom: 18px;
+  }
+  .cover h1 .italic-accent { font-style: italic; font-weight: 500; color: var(--coral); }
+  .cover .subtitle {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 22px; color: var(--ink-soft);
+    max-width: 50ch; margin-bottom: 32px;
+  }
+  .cover-art {
+    position: absolute; right: -40px; top: 80px;
+    width: 320px; height: 320px;
+    border-radius: 4px; overflow: hidden;
+    background: #1B1A2A; box-shadow: 0 12px 30px var(--shadow-strong);
+  }
+  @media (max-width: 800px) { .cover-art { display: none; } }
+  .cover-facts {
+    display: flex; gap: 32px; flex-wrap: wrap;
+    border-top: 2px solid var(--ink); padding-top: 20px;
+    margin-top: 40px; max-width: 600px;
+  }
+  .cover-facts > div { flex: 1 1 140px; }
+  .cover-facts .label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-soft); margin-bottom: 4px;
+  }
+  .cover-facts .value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px; }
+ 
+  /* PLAN */
+  .plan-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 24px; }
+  .plan-item {
+    display: grid; grid-template-columns: 80px 1fr auto; gap: 20px; align-items: center;
+    padding: 16px 20px; background: var(--paper-darker);
+    border-left: 4px solid var(--coral); border-radius: 2px;
+  }
+  .plan-item .num { font-family: 'Fraunces', serif; font-weight: 800; font-size: 36px; color: var(--coral); line-height: 1; }
+  .plan-item .what { font-family: 'Fraunces', serif; font-weight: 600; font-size: 19px; }
+  .plan-item .what small {
+    display: block; font-family: 'Vollkorn', serif; font-weight: 400;
+    font-size: 14px; color: var(--ink-soft); margin-top: 3px;
+  }
+  .plan-item .time {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--ink-soft); background: var(--paper);
+    padding: 4px 10px; border-radius: 2px; border: 1px solid var(--border);
+  }
+ 
+  /* TWO-COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; margin-top: 20px; }
+  @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+  .col-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--ink-soft); margin-bottom: 8px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+  .col-label.coral { color: var(--coral); border-color: var(--coral-soft); }
+  .col-label.sage { color: var(--sage); border-color: var(--sage-soft); }
+ 
+  /* EDITOR — посилений захист від переносів */
+  .editor {
+    background: white; border-radius: 8px;
+    box-shadow: 0 6px 18px var(--shadow);
+    overflow: hidden; border: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .editor-bar {
+    background: #2D2D2D; color: #DDD; padding: 8px 14px;
+    font-size: 12px; display: flex;
+    align-items: center; justify-content: space-between;
+  }
+  .editor-bar .run-btn {
+    background: #4FC08D; color: white; border: none; padding: 4px 14px;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;
+    border-radius: 3px; cursor: default;
+  }
+  .editor-bar .run-btn.glow {
+    box-shadow: 0 0 0 3px rgba(79, 192, 141, 0.4), 0 0 0 6px rgba(79, 192, 141, 0.15);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  .editor-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    min-height: 280px;
+  }
+  @media (max-width: 800px) {
+    .editor-split { grid-template-columns: 1fr; }
+    .editor-code { border-right: none !important; border-bottom: 1px solid var(--border); }
+  }
+  .editor-code {
+    background: var(--code-paper);
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 1px solid var(--border);
+    counter-reset: line;
+    min-width: 0;
+  }
+  .editor-code .line {
+    display: block;
+    white-space: pre !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    word-wrap: normal !important;
+  }
+  .editor-code .line::before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    width: 22px; margin-right: 10px;
+    color: #B8AE92; text-align: right; font-size: 11px;
+  }
+  .editor-code .line.new {
+    background: rgba(216, 92, 58, 0.14);
+    margin: 0 -16px; padding: 0 16px;
+    position: relative;
+  }
+  .editor-code .line.new::after {
+    content: '← новий';
+    position: absolute; right: 12px;
+    color: var(--coral); font-size: 10px;
+    font-style: italic; font-family: 'Fraunces', serif;
+  }
+  .editor-code .line.empty { color: #C9C1AE; font-style: italic; }
+  .editor-code .kw { color: #C92E58; font-weight: 700; }
+  .editor-code .builtin { color: #2F4A7C; }
+  .editor-code .str { color: #4F7A52; }
+  .editor-code .num { color: #C99B45; }
+  .editor-code .comment { color: #B8AE92; font-style: italic; }
+  .editor-code .fn { color: #2F4A7C; }
+  .editor-canvas {
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    padding: 14px; min-height: 280px; position: relative;
+    min-width: 0; overflow: hidden;
+  }
+  .editor-canvas .canvas-label {
+    position: absolute; top: 8px; left: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: #B8AE92; text-transform: uppercase; letter-spacing: 0.1em; z-index: 2;
+  }
+  .editor-canvas svg { max-width: 100%; max-height: 100%; }
+  .editor-canvas.dark { background: #1B1A2A; }
+  .editor-canvas.empty-canvas {
+    background: repeating-linear-gradient(45deg, #FAFAFA 0px, #FAFAFA 10px, #F2F2F2 10px, #F2F2F2 20px);
+    color: #BFB7A1; font-style: italic; font-size: 13px;
+  }
+  .editor-canvas.dark.empty-canvas { background: #1B1A2A; color: #4A4660; }
+ 
+  /* CALLOUTS */
+  .callout {
+    padding: 16px 20px; border-radius: 4px; margin: 16px 0;
+    font-size: 15px; border-left: 4px solid var(--ink);
+    background: var(--paper-darker);
+  }
+  .callout .tag {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; display: block;
+  }
+  .callout.tip { border-color: var(--sage); background: var(--sage-soft); }
+  .callout.tip .tag { color: var(--sage); }
+  .callout.warn { border-color: var(--coral); background: var(--coral-soft); }
+  .callout.warn .tag { color: var(--coral); }
+  .callout.info { border-color: var(--indigo); background: rgba(47, 74, 124, 0.1); }
+  .callout.info .tag { color: var(--indigo); }
+ 
+  /* CHECKLIST */
+  .checklist { list-style: none; margin: 16px 0; }
+  .checklist li { padding: 8px 0 8px 36px; position: relative; font-size: 16px; }
+  .checklist li::before {
+    content: '☐'; position: absolute; left: 4px; top: 6px;
+    font-size: 20px; color: var(--coral);
+  }
+  .checklist li.done::before { content: '☑'; color: var(--sage); }
+ 
+  /* TASKS */
+  .task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 20px; }
+  .task {
+    background: var(--paper-darker); border: 1px solid var(--border);
+    border-radius: 4px; padding: 18px; position: relative;
+  }
+  .task .task-num {
+    position: absolute; top: -14px; left: 14px;
+    background: var(--ink); color: var(--paper);
+    padding: 4px 12px; font-family: 'Fraunces', serif; font-weight: 700;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    border-radius: 2px;
+  }
+  .task h3 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px; margin: 8px 0 8px; }
+  .task p { font-size: 14px; color: var(--ink-soft); margin-bottom: 12px; }
+  .task .preview {
+    background: #1B1A2A; border-radius: 3px; width: 100%;
+    aspect-ratio: 1; display: flex; align-items: center;
+    justify-content: center; overflow: hidden;
+  }
+  .task .preview svg { width: 100%; height: 100%; }
+  .task-steps {
+    list-style: none; counter-reset: step;
+    margin: 12px 0; padding: 0;
+  }
+  .task-steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 8px 10px 8px 36px;
+    margin-bottom: 6px;
+    background: var(--paper);
+    border-left: 3px solid var(--coral);
+    border-radius: 2px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+  .task-steps li::before {
+    content: counter(step);
+    position: absolute; left: 8px; top: 8px;
+    width: 18px; height: 18px;
+    background: var(--coral); color: white;
+    font-family: 'Fraunces', serif;
+    font-size: 11px; font-weight: 700;
+    text-align: center; line-height: 18px;
+    border-radius: 50%;
+  }
+  .task-steps code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--code-paper);
+    padding: 0 4px; border-radius: 2px;
+    font-size: 0.88em; color: var(--ink);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+ 
+  /* NAVIGATION */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--paper); border-top: 1px solid var(--border);
+    padding: 14px 24px; display: flex;
+    justify-content: center; align-items: center; gap: 24px;
+    z-index: 50; box-shadow: 0 -4px 12px var(--shadow);
+  }
+  .nav-bar button {
+    background: var(--ink); color: var(--paper); border: none;
+    padding: 10px 22px; font-family: 'Fraunces', serif;
+    font-weight: 600; font-size: 15px; border-radius: 3px;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .nav-bar button:hover { background: var(--coral); transform: translateY(-1px); }
+  .nav-bar button:disabled {
+    background: var(--border); color: var(--ink-soft);
+    cursor: not-allowed; transform: none;
+  }
+  .nav-bar .indicator {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: var(--ink-soft); min-width: 60px; text-align: center;
+  }
+  .nav-bar .indicator strong { color: var(--coral); font-size: 16px; }
+ 
+  /* PROGRESS */
+  .progress {
+    display: flex; gap: 4px; padding: 10px 24px;
+    background: var(--paper); border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .progress .dot {
+    flex: 1; height: 4px; background: var(--border); border-radius: 2px;
+    cursor: pointer; min-width: 12px; transition: background 0.2s;
+  }
+  .progress .dot.done { background: var(--sage); }
+  .progress .dot.current { background: var(--coral); }
+  .progress .dot:hover { background: var(--ink); }
+ 
+  /* CELEBRATION */
+  .celebrate { text-align: center; padding: 40px 0; }
+  .celebrate .big-emoji {
+    font-size: 80px; margin-bottom: 20px; display: inline-block;
+    animation: wobble 2s ease-in-out infinite;
+  }
+  @keyframes wobble { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+ 
+  code.inline {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--paper-darker); padding: 1px 6px;
+    border-radius: 2px; font-size: 0.92em;
+    color: var(--coral); border: 1px solid var(--border);
+  }
+ 
+  /* COORDINATE DIAGRAM */
+  .coord-diagram {
+    background: #1B1A2A; border-radius: 4px;
+    padding: 16px; margin: 16px 0;
+  }
+  .coord-diagram svg { width: 100%; max-width: 380px; display: block; margin: 0 auto; }
+  .coord-diagram .coord-label { fill: #F4ECDA; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .coord-diagram .coord-axis { stroke: #4A4660; stroke-width: 1; stroke-dasharray: 3,3; }
+ 
+  @media print {
+    .nav-bar, .progress, .topbar { display: none; }
+    .slide { display: block !important; page-break-after: always; }
+    body::before { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">PYTHON</div>
+  <div class="meta">Випадкове мистецтво</div>
+</header>
+
+<div class="progress" id="progress"></div>
+
+<main class="stage" id="stage">
+
+  <!-- SLIDE 1: COVER -->
+  <section class="slide cover" data-slide="1">
+    <h1>Випадкове <span class="italic-accent"> <br> мистецтво.</span></h1>
+    <p class="subtitle">Сьогодні комп'ютер стане художником: жбурлятиме кольорові кружечки на чорне полотно навмання — і жодна картина не повториться.</p>
+    <div class="cover-art">
+      <svg viewBox="0 0 320 320" id="cover-art-target"></svg>
+    </div>
+    <div class="cover-facts">
+      <div><div class="label">Платформа</div><div class="value">trinket.io/turtle</div></div>
+      <div><div class="label">Бібліотеки</div><div class="value">turtle, random</div></div>
+      <div><div class="label">Нове</div><div class="value">randint, goto, dot</div></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: PLAN -->
+  <section class="slide" data-slide="2">
+    <span class="step-tag">План уроку</span>
+    <p class="lead">Будуємо картину покроково: один кружечок → керування позицією → випадковість → багато кружечків.</p>
+    <div class="plan-grid">
+      <div class="plan-item">
+        <div class="num">01</div>
+        <div class="what">Згадуємо Trinket<small>Відкриваємо trinket.io/turtle, прибираємо приклад</small></div>
+      </div>
+      <div class="plan-item">
+        <div class="num">02</div>
+        <div class="what">Один кружечок<small>Каркас, перший <code class="inline">dot()</code>, переміщення</small></div>
+      </div>
+      <div class="plan-item">
+        <div class="num">03</div>
+        <div class="what">Випадковість<small><code class="inline">random.randint</code>: позиція, розмір, колір</small></div>
+      </div>
+      <div class="plan-item">
+        <div class="num">04</div>
+        <div class="what">50 кружечків циклом<small>Фінальний код, кожен запуск — нова картина</small></div>
+      </div>
+      <div class="plan-item">
+        <div class="num">05</div>
+        <div class="what">Експерименти й виставка<small>Своя тема: снігопад, конфеті, сузір'я</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: PREP -->
+  <section class="slide" data-slide="3">
+    <span class="step-tag coral">Підготовка</span>
+    <h1 class="slide-title">Швиденько повторюємо</h1>
+    <p class="lead">Усе, як на минулому уроці: браузер → <strong>trinket.io/turtle</strong> → видаляємо стандартний приклад. Готові писати своє.</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py</span>
+        <button class="run-btn">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code">
+          <span class="line empty">тут має бути порожньо</span>
+          <span class="line empty">(виділив усе → Delete)</span>
+        </div>
+        <div class="editor-canvas dark empty-canvas">
+          поки порожньо —<br>картина з'явиться згодом
+        </div>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="tag">Не забудь /turtle</span>
+      Адреса має бути саме <code class="inline">trinket.io/turtle</code>, а не <code class="inline">trinket.io/python3</code> — інакше turtle не запрацює.
+    </div>
+  </section>
+
+  <!-- SLIDE 4: STEP 1 - FOUNDATION -->
+  <section class="slide" data-slide="4">
+    <span class="step-tag coral">Крок 1</span>
+    <h1 class="slide-title">Знайомий каркас</h1>
+    <p class="lead">Імпорти, черепаха, чорне полотно. Майже все знаємо — тільки два нових рядки: <code class="inline">hideturtle()</code> і <code class="inline">penup()</code>.</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py</span>
+        <button class="run-btn glow">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code">
+<span class="line"><span class="kw">import</span> turtle</span>
+<span class="line"><span class="kw">import</span> random</span>
+<span class="line"></span>
+<span class="line">t = turtle.<span class="fn">Turtle</span>()</span>
+<span class="line">t.<span class="fn">speed</span>(<span class="num">0</span>)</span>
+<span class="line new">t.<span class="fn">hideturtle</span>()</span>
+<span class="line new">t.<span class="fn">penup</span>()</span>
+<span class="line"></span>
+<span class="line">screen = turtle.<span class="fn">Screen</span>()</span>
+<span class="line">screen.<span class="fn">bgcolor</span>(<span class="str">"black"</span>)</span>
+        </div>
+        <div class="editor-canvas dark empty-canvas">
+          чорне полотно,<br>ще без малюнка
+        </div>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="tag">Що роблять нові рядки</span>
+      <p style="margin-bottom: 8px;"><code class="inline">hideturtle()</code> — ховає стрілочку черепахи. На цьому уроці вона нам не потрібна.</p>
+      <p style="margin-bottom: 0;"><code class="inline">penup()</code> — піднімає &laquo;олівець&raquo;. Коли черепаха переміщатиметься, слід (лінії) не залишатимется. Ми малюємо кружечки, а не лінії.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: STEP 2 - ONE DOT -->
+  <section class="slide" data-slide="5">
+    <span class="step-tag coral">Крок 2</span>
+    <h1 class="slide-title">Перший кружечок</h1>
+    <p class="lead">Команда <code class="inline">t.dot(розмір)</code> малює <strong>заповнений круг</strong> там, де зараз черепаха. На старті це центр екрана — точка (0, 0).</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py</span>
+        <button class="run-btn glow">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code">
+<span class="line comment"># ...каркас той самий...</span>
+<span class="line">screen.<span class="fn">bgcolor</span>(<span class="str">"black"</span>)</span>
+<span class="line"></span>
+<span class="line new">t.<span class="fn">color</span>(<span class="str">"red"</span>)</span>
+<span class="line new">t.<span class="fn">dot</span>(<span class="num">40</span>)</span>
+        </div>
+        <div class="editor-canvas dark">
+          <svg viewBox="-200 -200 400 400" width="240">
+            <rect x="-200" y="-200" width="400" height="400" fill="#1B1A2A"/>
+            <circle cx="0" cy="0" r="20" fill="#FF4D6D"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout tip">
+      <span class="tag">Спробуй різні розміри</span>
+      <code class="inline">t.dot(10)</code> — крапочка. <code class="inline">t.dot(100)</code> — велике коло на півекрана. Кольори: <code class="inline">"red"</code>, <code class="inline">"yellow"</code>, <code class="inline">"#FF00AA"</code>.
+    </div>
+  </section>
+
+  <!-- SLIDE 6: STEP 3 - GOTO -->
+  <section class="slide" data-slide="6">
+    <span class="step-tag coral">Крок 3</span>
+    <h1 class="slide-title">Стрибаємо в інше місце</h1>
+    <p class="lead">Щоб поставити кружечок не в центрі — спочатку треба перемістити черепаху. Це робить <code class="inline">t.goto(x, y)</code>. Завдяки <code class="inline">penup()</code> жодних ліній за нею не лишається.</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py</span>
+        <button class="run-btn glow">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code">
+<span class="line comment"># ...каркас...</span>
+<span class="line"></span>
+<span class="line">t.<span class="fn">color</span>(<span class="str">"red"</span>)</span>
+<span class="line">t.<span class="fn">dot</span>(<span class="num">40</span>)</span>
+<span class="line new"></span>
+<span class="line new">t.<span class="fn">goto</span>(<span class="num">100</span>, <span class="num">120</span>)</span>
+<span class="line new">t.<span class="fn">color</span>(<span class="str">"yellow"</span>)</span>
+<span class="line new">t.<span class="fn">dot</span>(<span class="num">40</span>)</span>
+        </div>
+        <div class="editor-canvas dark">
+          <svg viewBox="-200 -200 400 400" width="240">
+            <rect x="-200" y="-200" width="400" height="400" fill="#1B1A2A"/>
+            <circle cx="0" cy="0" r="20" fill="#FF4D6D"/>
+            <circle cx="100" cy="-120" r="20" fill="#FFD23F"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="tag">Координати у turtle</span>
+      <div class="coord-diagram" style="margin: 12px 0 0 0;">
+        <svg viewBox="-200 -200 400 400">
+          <rect x="-200" y="-200" width="400" height="400" fill="#1B1A2A"/>
+          <line x1="-200" y1="0" x2="200" y2="0" class="coord-axis"/>
+          <line x1="0" y1="-200" x2="0" y2="200" class="coord-axis"/>
+          <circle cx="0" cy="0" r="5" fill="#D85C3A"/>
+          <text x="10" y="-10" class="coord-label">(0, 0) — центр</text>
+          <text x="100" y="-195" class="coord-label" text-anchor="middle">+y (вгору)</text>
+          <text x="0" y="195" class="coord-label" text-anchor="middle">−y (вниз)</text>
+          <text x="-180" y="-5" class="coord-label">−x</text>
+          <text x="170" y="-5" class="coord-label">+x</text>
+          <circle cx="100" cy="-120" r="6" fill="#FFD23F"/>
+          <text x="115" y="-115" class="coord-label">(100, 120)</text>
+        </svg>
+      </div>
+      У turtle <strong>вгору — це +y</strong>. Точка <code class="inline">(100, 120)</code> опиниться правіше та вище центру.
+    </div>
+  </section>
+
+  <!-- SLIDE 7: STEP 4 - RANDOM POSITION -->
+  <section class="slide" data-slide="7">
+    <span class="step-tag coral">Крок 4</span>
+    <h1 class="slide-title">Випадкова позиція</h1>
+    <p class="lead">Головна ідея уроку. Замість того, щоб самим думати, куди поставити кружечок, попросимо комп'ютер вибрати координати <strong>навмання</strong>. Це робить <code class="inline">random.randint(від, до)</code>.</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py</span>
+        <button class="run-btn glow">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code">
+<span class="line comment"># ...каркас...</span>
+<span class="line"></span>
+<span class="line new">x = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line new">y = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line new"></span>
+<span class="line new">t.<span class="fn">goto</span>(x, y)</span>
+<span class="line new">t.<span class="fn">color</span>(<span class="str">"red"</span>)</span>
+<span class="line new">t.<span class="fn">dot</span>(<span class="num">40</span>)</span>
+        </div>
+        <div class="editor-canvas dark">
+          <svg viewBox="-200 -200 400 400" width="240">
+            <rect x="-200" y="-200" width="400" height="400" fill="#1B1A2A"/>
+            <circle cx="-78" cy="42" r="20" fill="#FF4D6D"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="tag">Як працює <code class="inline">randint(-200, 200)</code></span>
+      Це функція з бібліотеки random. Вона повертає <strong>випадкове ціле число</strong> від −200 до 200 включно. Може випасти −187, 0, 42, 199 — будь-що. Кожен виклик — нове число.
+    </div>
+    <div class="callout tip">
+      <span class="tag">Запусти кілька разів</span>
+      Натисни ▶ Run п'ять разів підряд. Кружечок з'являтиметься у різних місцях — комп'ютер щоразу обирає інші x та y.
+    </div>
+  </section>
+
+  <!-- SLIDE 8: STEP 5 - RANDOM SIZE -->
+  <section class="slide" data-slide="8">
+    <span class="step-tag coral">Крок 5</span>
+    <h1 class="slide-title">І розмір випадковий</h1>
+    <p class="lead">Той самий прийом для розміру: <code class="inline">randint(10, 50)</code> — випадкове число від 10 до 50. Маленькі цяточки і великі диски — впереміш.</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py</span>
+        <button class="run-btn glow">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code">
+<span class="line comment"># ...каркас...</span>
+<span class="line"></span>
+<span class="line">x = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line">y = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line new">size = random.<span class="fn">randint</span>(<span class="num">10</span>, <span class="num">50</span>)</span>
+<span class="line"></span>
+<span class="line">t.<span class="fn">goto</span>(x, y)</span>
+<span class="line">t.<span class="fn">color</span>(<span class="str">"red"</span>)</span>
+<span class="line new">t.<span class="fn">dot</span>(size)</span>
+        </div>
+        <div class="editor-canvas dark">
+          <svg viewBox="-200 -200 400 400" width="240">
+            <rect x="-200" y="-200" width="400" height="400" fill="#1B1A2A"/>
+            <circle cx="60" cy="-110" r="18" fill="#FF4D6D"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout tip">
+      <span class="tag">Спробуй ширший діапазон</span>
+      <code class="inline">randint(5, 100)</code> — від крапки до півекрана. Картина стане ще різноманітніша.
+    </div>
+  </section>
+
+  <!-- SLIDE 9: STEP 6 - RANDOM COLOR -->
+  <section class="slide" data-slide="9">
+    <span class="step-tag coral">Крок 6</span>
+    <h1 class="slide-title">Випадковий колір</h1>
+    <p class="lead">Цей прийом ми вже знаємо з минулого уроку: список кольорів і <code class="inline">random.choice</code>, що бере з нього один навмання.</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py</span>
+        <button class="run-btn glow">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code">
+<span class="line comment"># ...каркас...</span>
+<span class="line"></span>
+<span class="line new">colors = [<span class="str">"red"</span>, <span class="str">"yellow"</span>,</span>
+<span class="line new">          <span class="str">"blue"</span>, <span class="str">"green"</span>,</span>
+<span class="line new">          <span class="str">"orange"</span>, <span class="str">"cyan"</span>]</span>
+<span class="line"></span>
+<span class="line">x = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line">y = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line">size = random.<span class="fn">randint</span>(<span class="num">10</span>, <span class="num">50</span>)</span>
+<span class="line"></span>
+<span class="line">t.<span class="fn">goto</span>(x, y)</span>
+<span class="line new">t.<span class="fn">color</span>(random.<span class="fn">choice</span>(colors))</span>
+<span class="line">t.<span class="fn">dot</span>(size)</span>
+        </div>
+        <div class="editor-canvas dark">
+          <svg viewBox="-200 -200 400 400" width="240">
+            <rect x="-200" y="-200" width="400" height="400" fill="#1B1A2A"/>
+            <circle cx="-30" cy="80" r="22" fill="#9B72CF"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="tag">Розбір <code class="inline">random.choice(colors)</code></span>
+      <code class="inline">colors</code> — список (у квадратних дужках, через кому). <code class="inline">choice</code> бере <strong>один елемент</strong> зі списку випадково.
+    </div>
+  </section>
+
+  <!-- SLIDE 10: STEP 7 - LOOP -->
+  <section class="slide" data-slide="10">
+    <span class="step-tag coral">Крок 7</span>
+    <h1 class="slide-title">Цикл — і кружечків стає <em>50</em></h1>
+    <p class="lead">Тепер усе разом: загортаємо вибір координат, розміру, кольору і малювання — у цикл на 50 повторень. Кожен оберт — новий випадковий кружечок.</p>
+    <div class="editor">
+      <div class="editor-bar">
+        <span>main.py · фінальний код</span>
+        <button class="run-btn glow">▶ Run</button>
+      </div>
+      <div class="editor-split">
+        <div class="editor-code" style="font-size: 12px;">
+<span class="line"><span class="kw">import</span> turtle</span>
+<span class="line"><span class="kw">import</span> random</span>
+<span class="line"></span>
+<span class="line">t = turtle.<span class="fn">Turtle</span>()</span>
+<span class="line">t.<span class="fn">speed</span>(<span class="num">0</span>)</span>
+<span class="line">t.<span class="fn">hideturtle</span>()</span>
+<span class="line">t.<span class="fn">penup</span>()</span>
+<span class="line"></span>
+<span class="line">screen = turtle.<span class="fn">Screen</span>()</span>
+<span class="line">screen.<span class="fn">bgcolor</span>(<span class="str">"black"</span>)</span>
+<span class="line"></span>
+<span class="line">colors = [<span class="str">"red"</span>, <span class="str">"yellow"</span>,</span>
+<span class="line">          <span class="str">"blue"</span>, <span class="str">"green"</span>,</span>
+<span class="line">          <span class="str">"orange"</span>, <span class="str">"cyan"</span>]</span>
+<span class="line"></span>
+<span class="line new"><span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">50</span>):</span>
+<span class="line new">    x = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line new">    y = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line new">    size = random.<span class="fn">randint</span>(<span class="num">10</span>, <span class="num">50</span>)</span>
+<span class="line new">    t.<span class="fn">goto</span>(x, y)</span>
+<span class="line new">    t.<span class="fn">color</span>(random.<span class="fn">choice</span>(colors))</span>
+<span class="line new">    t.<span class="fn">dot</span>(size)</span>
+        </div>
+        <div class="editor-canvas dark">
+          <svg viewBox="-200 -200 400 400" width="260" id="step7-art"></svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="tag">Слідкуй за відступами</span>
+      Все, що всередині циклу, має <strong>відступ 4 пробіли</strong>. Python без відступів не зрозуміє, що ці рядки треба повторювати.
+    </div>
+  </section>
+
+  <!-- SLIDE 11: CELEBRATION -->
+  <section class="slide" data-slide="11">
+    <span class="step-tag sage">Готово</span>
+    <h1 class="slide-title">Картина готова — <em>і вона унікальна</em></h1>
+    <p class="lead">Натисни ▶ Run кілька разів. Щоразу — нова картина: інші позиції, інші розміри, інші кольори. Цього <strong>точного</strong> малюнка більше ніхто й ніколи не побачить.</p>
+    <div class="two-col">
+      <div>
+        <div class="col-label coral">Запуск 1</div>
+        <div style="background: #1B1A2A; aspect-ratio: 1; border-radius: 4px;">
+          <svg viewBox="-200 -200 400 400" width="100%" id="result-1"></svg>
+        </div>
+      </div>
+      <div>
+        <div class="col-label coral">Запуск 2</div>
+        <div style="background: #1B1A2A; aspect-ratio: 1; border-radius: 4px;">
+          <svg viewBox="-200 -200 400 400" width="100%" id="result-2"></svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="tag">Чому це круто</span>
+      Ти написав програму, яка <strong>сама</strong> вирішує, як виглядатиме результат. Не ти ставив кожне коло — комп'ютер. Це і називається &laquo;генеративне мистецтво&raquo;, і саме за цим принципом працюють великі художні проєкти.
+    </div>
+  </section>
+
+  <!-- SLIDE 12: TASK 1 -->
+  <section class="slide" data-slide="12">
+    <span class="step-tag sage">Завдання 1</span>
+    <h1 class="slide-title">Експерименти з числами</h1>
+    <p class="lead">Поміняй <strong>одне</strong> число у коді — і отримай зовсім іншу картину.</p>
+    <div class="task-grid">
+      <div class="task">
+        <span class="task-num">A</span>
+        <h3>200 замість 50</h3>
+        <p><code class="inline">range(50)</code> → <code class="inline">range(200)</code>. Кружечків стане вчетверо більше — буде як зорі на нічному небі.</p>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-a"></svg></div>
+      </div>
+      <div class="task">
+        <span class="task-num">B</span>
+        <h3>Тільки великі</h3>
+        <p><code class="inline">randint(10, 50)</code> → <code class="inline">randint(50, 150)</code>. Дрібнички зникають — лишаються гігантські планети.</p>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-b"></svg></div>
+      </div>
+      <div class="task">
+        <span class="task-num">C</span>
+        <h3>Тільки вгорі</h3>
+        <p>В рядку для y: <code class="inline">randint(-200, 200)</code> → <code class="inline">randint(0, 200)</code>. Картина займе тільки верхню половину.</p>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-c"></svg></div>
+      </div>
+    </div>
+  </section>
+
+   <!-- SLIDE 13: TASK 2 - THEMED -->
+  <section class="slide" data-slide="13">
+    <span class="step-tag sage">Завдання 2</span>
+    <h1 class="slide-title">Картина за темою</h1>
+    <p class="lead">Зміни <strong>кілька</strong> параметрів одночасно — отримаєш конкретну тему. Кожна — це поєднання кольорів, розмірів і області.</p>
+    <div class="task-grid">
+      <div class="task">
+        <span class="task-num">❄</span>
+        <h3>Снігопад</h3>
+        <ol class="task-steps">
+          <li>У списку <code>colors</code> залиш лише <code>"white"</code> — усе інше прибери</li>
+          <li>У <code>range(50)</code> постав <code>150</code></li>
+          <li>У <code>randint(10, 50)</code> постав <code>3, 10</code></li>
+        </ol>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-snow"></svg></div>
+      </div>
+      <div class="task">
+        <span class="task-num">🎉</span>
+        <h3>Конфеті</h3>
+        <ol class="task-steps">
+          <li>У списку <code>colors</code> додай ще: <code>"pink"</code>, <code>"lime"</code>, <code>"magenta"</code></li>
+          <li>У <code>range(50)</code> постав <code>200</code></li>
+          <li>У <code>randint(10, 50)</code> постав <code>5, 15</code></li>
+        </ol>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-confetti"></svg></div>
+      </div>
+      <div class="task">
+        <span class="task-num">🫧</span>
+        <h3>Бульбашки</h3>
+        <ol class="task-steps">
+          <li>У списку <code>colors</code> залиш лише: <code>"cyan"</code>, <code>"lightblue"</code>, <code>"deepskyblue"</code></li>
+          <li>У <code>randint(10, 50)</code> постав <code>15, 60</code></li>
+        </ol>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-bubbles"></svg></div>
+      </div>
+    </div>
+    <div class="callout tip">
+      <span class="tag">Своя тема</span>
+      Спробуй вигадати: листопад (жовто-помаранчеве, тільки зверху), нічне місто з вогниками вікон, акваріум. Гра — у поєднанні палітри й діапазону.
+    </div>
+  </section>
+
+  <!-- SLIDE 14: TASK 3 - MONOCHROME -->
+  <section class="slide" data-slide="14">
+    <span class="step-tag sage">Завдання 3</span>
+    <h1 class="slide-title">Монохромна гама</h1>
+    <p class="lead">Сила одного кольору. Заміни палітру на відтінки одного — і картина стане настроєвою.</p>
+    <div class="task-grid">
+      <div class="task">
+        <span class="task-num">🔴</span>
+        <h3>Тільки червоне</h3>
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--code-paper); padding: 8px; border-radius: 2px; line-height: 1.5;">colors = [<br>&nbsp;<span style="color: var(--sage);">"red"</span>, <span style="color: var(--sage);">"crimson"</span>,<br>&nbsp;<span style="color: var(--sage);">"darkred"</span>,<br>&nbsp;<span style="color: var(--sage);">"salmon"</span>,<br>&nbsp;<span style="color: var(--sage);">"tomato"</span><br>]</p>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-mono-red"></svg></div>
+      </div>
+      <div class="task">
+        <span class="task-num">🟢</span>
+        <h3>Тільки зелене</h3>
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--code-paper); padding: 8px; border-radius: 2px; line-height: 1.5;">colors = [<br>&nbsp;<span style="color: var(--sage);">"green"</span>,<br>&nbsp;<span style="color: var(--sage);">"lime"</span>,<br>&nbsp;<span style="color: var(--sage);">"darkgreen"</span>,<br>&nbsp;<span style="color: var(--sage);">"olive"</span><br>]</p>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-mono-green"></svg></div>
+      </div>
+      <div class="task">
+        <span class="task-num">🟣</span>
+        <h3>Тільки бузкове</h3>
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--code-paper); padding: 8px; border-radius: 2px; line-height: 1.5;">colors = [<br>&nbsp;<span style="color: var(--sage);">"purple"</span>,<br>&nbsp;<span style="color: var(--sage);">"violet"</span>,<br>&nbsp;<span style="color: var(--sage);">"plum"</span>,<br>&nbsp;<span style="color: var(--sage);">"orchid"</span><br>]</p>
+        <div class="preview"><svg viewBox="-200 -200 400 400" id="task-mono-purple"></svg></div>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="tag">Більше кольорів</span>
+      Гугли &laquo;CSS color names&raquo; — там понад 140 готових англомовних назв. Або задавай свої через HEX: <code class="inline">"#FF6B9D"</code> (рожевий), <code class="inline">"#2EC4B6"</code> (м'ятний).
+    </div>
+  </section>
+
+  <!-- SLIDE 15: BONUS - CONSTELLATION -->
+  <section class="slide" data-slide="15">
+    <span class="step-tag indigo">Бонус для швидких</span>
+    <h1 class="slide-title">Сузір'я з ниток</h1>
+    <p class="lead">Що буде, якщо <strong>опустити олівець</strong>? Тоді при переміщенні черепаха залишатиме за собою лінії — і випадкові точки з'єднаються у сузір'я.</p>
+    <div class="two-col">
+      <div>
+        <div class="col-label">Зміни в коді</div>
+        <div class="editor" style="margin-top: 0;">
+          <div class="editor-bar">
+            <span>main.py</span>
+            <button class="run-btn">▶ Run</button>
+          </div>
+          <div class="editor-code" style="border-right: none;">
+<span class="line comment"># каркас БЕЗ t.penup()</span>
+<span class="line"></span>
+<span class="line">colors = [<span class="str">"white"</span>,</span>
+<span class="line">          <span class="str">"yellow"</span>, <span class="str">"cyan"</span>]</span>
+<span class="line"></span>
+<span class="line"><span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">30</span>):</span>
+<span class="line">    x = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line">    y = random.<span class="fn">randint</span>(<span class="num">-200</span>, <span class="num">200</span>)</span>
+<span class="line">    t.<span class="fn">color</span>(random.<span class="fn">choice</span>(colors))</span>
+<span class="line">    t.<span class="fn">goto</span>(x, y)</span>
+<span class="line">    t.<span class="fn">dot</span>(<span class="num">8</span>)</span>
+          </div>
+        </div>
+        <p style="font-size: 14px; margin-top: 12px;">Прибери рядок <code class="inline">t.penup()</code> з каркасу — і одразу <code class="inline">goto</code> почне залишати лінії між точками.</p>
+      </div>
+      <div>
+        <div class="col-label coral">Що з'явиться</div>
+        <div style="background: #1B1A2A; aspect-ratio: 1; border-radius: 4px;">
+          <svg viewBox="-200 -200 400 400" width="100%" id="constellation-art"></svg>
+        </div>
+      </div>
+    </div>
+    <div class="callout tip">
+      <span class="tag">Ще трюки</span>
+      <code class="inline">t.pensize(2)</code> на початку — нитки товщі. <code class="inline">range(80)</code> замість 30 — буде павутина.
+    </div>
+  </section>
+
+  <!-- SLIDE 16: FINAL -->
+  <section class="slide" data-slide="16">
+    <div class="celebrate">
+      <div class="big-emoji">🎨</div>
+      <h1 class="slide-title">Чудово!</h1>
+      <p class="lead" style="margin: 0 auto 30px;">Ти познайомився з <code class="inline">random.randint</code>, навчився керувати позицією черепахи, зрозумів різницю між <code class="inline">penup</code> і <code class="inline">pendown</code> — і написав програму, що створює унікальну картину при кожному запуску.</p>
+    </div>
+    <h2 style="font-family: 'Fraunces', serif; font-weight: 700; font-size: 22px; margin-top: 20px; margin-bottom: 12px;">📋 Чек-лист уроку</h2>
+    <ul class="checklist">
+      <li class="done">Каркас із <code class="inline">hideturtle()</code> та <code class="inline">penup()</code></li>
+      <li class="done">Малювали один кружечок командою <code class="inline">dot()</code></li>
+      <li class="done">Переміщали черепаху через <code class="inline">goto(x, y)</code></li>
+      <li class="done">Зробили позицію, розмір і колір випадковими</li>
+      <li class="done">Запакували все в цикл на 50 повторень</li>
+      <li class="done">Зробили тематичну або монохромну картину</li>
+    </ul>
+    
+  </section>
+
+</main>
+
+<nav class="nav-bar">
+  <button id="prev" onclick="navigate(-1)">← Назад</button>
+  <span class="indicator"><strong id="current">1</strong> / <span id="total">16</span></span>
+  <button id="next" onclick="navigate(1)">Далі →</button>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let current = 1;
+  document.getElementById('total').textContent = totalSlides;
+
+  const progress = document.getElementById('progress');
+  for (let i = 1; i <= totalSlides; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.onclick = () => goTo(i);
+    progress.appendChild(dot);
+  }
+  const dots = progress.querySelectorAll('.dot');
+
+  function goTo(n) {
+    if (n < 1 || n > totalSlides) return;
+    slides.forEach(s => s.classList.remove('active'));
+    slides[n - 1].classList.add('active');
+    current = n;
+    document.getElementById('current').textContent = n;
+    document.getElementById('prev').disabled = n === 1;
+    document.getElementById('next').disabled = n === totalSlides;
+    dots.forEach((d, i) => {
+      d.classList.remove('current', 'done');
+      if (i + 1 < n) d.classList.add('done');
+      if (i + 1 === n) d.classList.add('current');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function navigate(delta) { goTo(current + delta); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+  goTo(1);
+
+  // === RANDOM ART ===
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const palette = ['#FF4D6D', '#FFD23F', '#5BC0EB', '#4FC08D', '#FF914D', '#9B72CF', '#5BD8E8', '#F0EAD2'];
+
+  function makeRandomArt(target, opts) {
+    const {
+      count = 50, sizeMin = 10, sizeMax = 50,
+      xMin = -200, xMax = 200, yMin = -200, yMax = 200,
+      colors = palette
+    } = opts || {};
+    if (!target) return;
+    target.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const x = xMin + Math.random() * (xMax - xMin);
+      const y = yMin + Math.random() * (yMax - yMin);
+      const r = (sizeMin + Math.random() * (sizeMax - sizeMin)) / 2;
+      const c = colors[Math.floor(Math.random() * colors.length)];
+      const circle = document.createElementNS(svgNS, 'circle');
+      circle.setAttribute('cx', x.toFixed(1));
+      circle.setAttribute('cy', y.toFixed(1));
+      circle.setAttribute('r', r.toFixed(1));
+      circle.setAttribute('fill', c);
+      target.appendChild(circle);
+    }
+  }
+
+  function makeConstellation(target) {
+    if (!target) return;
+    target.innerHTML = '';
+    const points = [];
+    const colors = ['#F0EAD2', '#FFD23F', '#5BD8E8'];
+    for (let i = 0; i < 30; i++) {
+      points.push({
+        x: -200 + Math.random() * 400,
+        y: -200 + Math.random() * 400,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+    for (let i = 1; i < points.length; i++) {
+      const line = document.createElementNS(svgNS, 'line');
+      line.setAttribute('x1', points[i-1].x.toFixed(1));
+      line.setAttribute('y1', points[i-1].y.toFixed(1));
+      line.setAttribute('x2', points[i].x.toFixed(1));
+      line.setAttribute('y2', points[i].y.toFixed(1));
+      line.setAttribute('stroke', points[i].color);
+      line.setAttribute('stroke-width', '1');
+      line.setAttribute('opacity', '0.7');
+      target.appendChild(line);
+    }
+    for (const p of points) {
+      const dot = document.createElementNS(svgNS, 'circle');
+      dot.setAttribute('cx', p.x.toFixed(1));
+      dot.setAttribute('cy', p.y.toFixed(1));
+      dot.setAttribute('r', '4');
+      dot.setAttribute('fill', p.color);
+      target.appendChild(dot);
+    }
+  }
+
+  makeRandomArt(document.getElementById('cover-art-target'), { count: 60, sizeMin: 8, sizeMax: 40, xMin: 0, xMax: 320, yMin: 0, yMax: 320 });
+  makeRandomArt(document.getElementById('step7-art'), { count: 50 });
+  makeRandomArt(document.getElementById('result-1'), { count: 50 });
+  makeRandomArt(document.getElementById('result-2'), { count: 50 });
+  makeRandomArt(document.getElementById('task-a'), { count: 200 });
+  makeRandomArt(document.getElementById('task-b'), { count: 50, sizeMin: 50, sizeMax: 150 });
+  makeRandomArt(document.getElementById('task-c'), { count: 50, yMin: -200, yMax: 0 });
+  makeRandomArt(document.getElementById('task-snow'), {
+    count: 150, sizeMin: 3, sizeMax: 10,
+    colors: ['#FFFFFF', '#F4ECDA', '#E8E2D0']
+  });
+  makeRandomArt(document.getElementById('task-confetti'), {
+    count: 200, sizeMin: 5, sizeMax: 15,
+    colors: ['#FF4D6D', '#FFD23F', '#5BC0EB', '#4FC08D', '#FF914D', '#9B72CF', '#FF7AB8', '#5BD8E8']
+  });
+  makeRandomArt(document.getElementById('task-bubbles'), {
+    count: 40, sizeMin: 15, sizeMax: 60,
+    colors: ['#5BC0EB', '#87CEEB', '#5BD8E8', '#4FC0E8', '#A8E6FA']
+  });
+  makeRandomArt(document.getElementById('task-mono-red'), {
+    count: 50, colors: ['#DC143C', '#FF6347', '#FA8072', '#FF0000', '#B22222', '#FFB6C1']
+  });
+  makeRandomArt(document.getElementById('task-mono-green'), {
+    count: 50, colors: ['#228B22', '#32CD32', '#006400', '#808000', '#9ACD32', '#7CFC00']
+  });
+  makeRandomArt(document.getElementById('task-mono-purple'), {
+    count: 50, colors: ['#9370DB', '#EE82EE', '#DDA0DD', '#DA70D6', '#FF00FF', '#BA55D3']
+  });
+  makeConstellation(document.getElementById('constellation-art'));
+</script>
+
+</body>
+</html>
